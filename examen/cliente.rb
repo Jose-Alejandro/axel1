@@ -1,7 +1,8 @@
 require "socket"
 
+#HOST = "10.100.68.72"
 HOST = "localhost"
-PORT = 4567
+PORT = 1234
 
 def get_query
   # Variable para acumular consultas
@@ -37,6 +38,7 @@ end
 socket = TCPSocket.new HOST, PORT
 
 loop do
+  puts socket.gets
   query = get_query
   socket.puts query
   puts socket.gets
