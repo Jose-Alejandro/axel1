@@ -3,6 +3,7 @@ require "socket"
 #HOST = "10.100.68.72"
 HOST = "localhost"
 PORT = 1234
+PROMPT = "MySQL-v.axel>"
 
 def get_query
   # Variable para acumular consultas
@@ -12,6 +13,7 @@ def get_query
   query = ""
 
   loop do
+    print "#{PROMPT} "
     query = gets.strip.downcase
 
     if query.start_with? "exit"
@@ -38,8 +40,7 @@ end
 socket = TCPSocket.new HOST, PORT
 
 loop do
-  puts socket.gets
   query = get_query
   socket.puts query
-  puts socket.gets
+  puts "#{PROMPT}> #{socket.gets}\n"
 end
