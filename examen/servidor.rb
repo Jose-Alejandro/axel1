@@ -14,7 +14,7 @@ server = TCPServer.new HOST, PORT
 puts "Servicio iniciado en #{HOST}:#{PORT}"
 puts "Esperando clientes..."
 
-handler = ServerSQL.new
+handler = SQLHandler.new
 
 loop do
   Thread.start(server.accept) do |client|
