@@ -1,0 +1,216 @@
+{
+  "meta": {
+    "name": "tabla_2",
+    "statement": "create table tabla_2( columna_2 int, columna_1 varchar(10))",
+    "columns": [
+      {
+        "columna_1": {
+          "data_type": {
+            "varchar": {
+              "length": {
+                "integer": "10"
+              }
+            }
+          },
+          "options": ""
+        }
+      },
+      {
+        "columna_2": {
+          "data_type": "int",
+          "options": ""
+        }
+      }
+    ]
+  },
+  "rows": [
+    {
+      "columna_1": 25,
+      "columna_2": "hola"
+    },
+    {
+      "columna_1": 3899,
+      "columna_2": "jfqptnio"
+    },
+    {
+      "columna_1": 9046,
+      "columna_2": "reknpczg"
+    },
+    {
+      "columna_1": 7843,
+      "columna_2": "yxejkofc"
+    },
+    {
+      "columna_1": 7892,
+      "columna_2": "phyvjwiq"
+    },
+    {
+      "columna_1": 5382,
+      "columna_2": "qapvgmth"
+    },
+    {
+      "columna_1": 2299,
+      "columna_2": "bpmvgdus"
+    },
+    {
+      "columna_1": 1552,
+      "columna_2": "tcwfyepj"
+    },
+    {
+      "columna_1": 7192,
+      "columna_2": "xanuwyph"
+    },
+    {
+      "columna_1": 8076,
+      "columna_2": "znuxmkeq"
+    },
+    {
+      "columna_1": 2707,
+      "columna_2": "zrusiomg"
+    },
+    {
+      "columna_1": 6950,
+      "columna_2": "igfqxevl"
+    },
+    {
+      "columna_1": 8539,
+      "columna_2": "chweoqdt"
+    },
+    {
+      "columna_1": 3691,
+      "columna_2": "fbuytmsj"
+    },
+    {
+      "columna_1": 9962,
+      "columna_2": "labhziex"
+    },
+    {
+      "columna_1": 2425,
+      "columna_2": "vsmtoxnl"
+    },
+    {
+      "columna_1": 8051,
+      "columna_2": "uztkrejq"
+    },
+    {
+      "columna_1": 4123,
+      "columna_2": "swufykgo"
+    },
+    {
+      "columna_1": 6184,
+      "columna_2": "qftdzrob"
+    },
+    {
+      "columna_1": 9363,
+      "columna_2": "hqakxfcp"
+    },
+    {
+      "columna_1": 7108,
+      "columna_2": "efwvaknh"
+    },
+    {
+      "columna_1": 1704,
+      "columna_2": "ozsxurpe"
+    },
+    {
+      "columna_1": 3162,
+      "columna_2": "roskizaq"
+    },
+    {
+      "columna_1": 8773,
+      "columna_2": "xmjgtfck"
+    },
+    {
+      "columna_1": 4376,
+      "columna_2": "wdnjeagu"
+    },
+    {
+      "columna_1": 2740,
+      "columna_2": "horxfals"
+    },
+    {
+      "columna_1": 5247,
+      "columna_2": "kpgbtuqr"
+    },
+    {
+      "columna_1": 5181,
+      "columna_2": "dpynjqxf"
+    },
+    {
+      "columna_1": 5566,
+      "columna_2": "anupxclj"
+    },
+    {
+      "columna_1": 1053,
+      "columna_2": "vsphqlue"
+    },
+    {
+      "columna_1": 2436,
+      "columna_2": "xqsgenlb"
+    },
+    {
+      "columna_1": 8868,
+      "columna_2": "zguafckq"
+    },
+    {
+      "columna_1": 5352,
+      "columna_2": "hoankify"
+    },
+    {
+      "columna_1": 1883,
+      "columna_2": "jcwvaoly"
+    },
+    {
+      "columna_1": 7582,
+      "columna_2": "oryfizhp"
+    },
+    {
+      "columna_1": 4927,
+      "columna_2": "pocsremy"
+    },
+    {
+      "columna_1": 9914,
+      "columna_2": "zuxdqacn"
+    },
+    {
+      "columna_1": 1140,
+      "columna_2": "ptvfzyix"
+    },
+    {
+      "columna_1": 6994,
+      "columna_2": "wflaurgq"
+    },
+    {
+      "columna_1": 9062,
+      "columna_2": "ohscyema"
+    },
+    {
+      "columna_1": 9112,
+      "columna_2": "rtfyoqjb"
+    },
+    {
+      "columna_1": 1992,
+      "columna_2": "coyjxrft"
+    },
+    {
+      "columna_1": 5874,
+      "columna_2": "picwajyv"
+    },
+    {
+      "columna_1": 3326,
+      "columna_2": "uhamwroy"
+    },
+    {
+      "columna_1": 8419,
+      "columna_2": "zspybuxf"
+    },
+    {
+      "columna_1": 1592,
+      "columna_2": "byxqhagk"
+    },
+    {
+      "columna_1": 6644,
+      "columna_2": "uaqnoilt"
+    }
+  ]
+}

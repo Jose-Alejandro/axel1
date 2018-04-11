@@ -37,8 +37,10 @@ class SQLHandler
       case
       when parsed.is_a?(base::Insert)
         return insert_into parsed
+      when parsed.is_a?(base::DirectSelect)
+        return select_from parsed
       else
-        return "no soportado"
+        return "Aun no soportado :("
       end
 
     rescue Racc::ParseError => dml_error
@@ -59,12 +61,12 @@ class SQLHandler
           return parsed.parse_error.message
         end
 
-        tree = parsed.parse_tree
-
         # Checar que tipo de operacion se realizo
-        case tree[:operation].to_s
-        when "create table"
-          return create_table tree[:table_name], tree[:elements]
+        case parsed.statement_type
+        when :create_table
+          return create_table parsed
+        else
+          return "Aun no soportado :("
         end
       rescue RuntimeError => ddl_error
         # La sentencia no es de tipo DDL
@@ -120,11 +122,7 @@ class SQLHandler
   private
 
   def database_path(database_name = nil)
-    if database_name
-      "#{DB_DIR}/#{database_name}"
-    end
-
-    "#{DB_DIR}/#{@current_db}"
+    database_name ? "#{DB_DIR}/#{database_name}" : "#{DB_DIR}/#{@current_db}"
   end
 
   def table_path(table_name)
@@ -147,12 +145,12 @@ class SQLHandler
 
     # Los caracteres "\0" seran reemplazados por
     # saltos de linea "\n" del lado del cliente
-    "Bases existentes:\0\0#{databases.join("\0")}\0"
+    "Bases existentes:\0\0#{databases.join('\0')}\0"
   end
 
   def show_tables
     unless @current_db
-      return "Selecciona primero una base de datos: 'USE <NOMBRE_TABLA>'"
+      return "Selecciona primero una base de datos: 'USE <NOMBRE_BASE>'"
     end
 
     tables = Dir.entries(database_path) - [".", ".."]
@@ -162,7 +160,7 @@ class SQLHandler
 
     # Los caracteres "\0" seran reemplazados por
     # saltos de linea "\n" del lado del cliente
-    "Tablas en `#{@current_db}`:\0\0#{tables.join("\0").gsub(".json", "")}\0"
+    "Tablas en `#{@current_db}`:\0\0#{tables.join('\0').gsub(".json", "")}\0"
   end
 
   def create_database(database_name)
@@ -189,22 +187,25 @@ class SQLHandler
     IO.write table_path(table["meta"]["name"]), JSON.pretty_generate(table)
   end
 
-  def create_table(table_name, fields)
+  def create_table(parse_result)
     unless @current_db
-      return "Selecciona primero una base de datos: 'USE <NOMBRE_TABLA>'"
+      return "Selecciona primero una base de datos: 'USE <NOMBRE_BASE>'"
     end
 
+    table_name = parse_result.parse_tree[:table_name].to_s
     if table_exists? table_name
       return "Ya existe la tabla `#{@current_db}`.`#{table_name}`"
     end
 
     table = {
       "meta" => {
-        "name" => table_name
+        "name" => table_name,
+        "statement" => parse_result.instance_variable_get("@statement").strip
       },
       "rows" => []
     }
 
+    fields = parse_result.parse_tree[:elements]
     if fields.is_a? Hash
       # Crear tabla con un solo campo
       res = {}
@@ -213,11 +214,12 @@ class SQLHandler
       table["meta"]["columns"] = [res]
     else
       table["meta"]["columns"] = fields.map do |column|
+        # column = column.sort.to_h
         res = {}
         res[column[:column][:field]] = column[:column]
         res[column[:column][:field]].delete :field
         res
-      end
+      end.sort_by { |field| field.keys.first.to_s }
     end
 
     save_table table
@@ -227,7 +229,7 @@ class SQLHandler
 
   def drop_table(table_name)
     unless @current_db
-      return "Selecciona primero una base de datos: 'USE <NOMBRE_TABLA>'"
+      return "Selecciona primero una base de datos: 'USE <NOMBRE_BASE>'"
     end
 
     unless table_exists? table_name
@@ -271,7 +273,7 @@ class SQLHandler
 
   def insert_into(parse_result)
     unless @current_db
-      return "Selecciona primero una base de datos: 'USE <NOMBRE_TABLA>'"
+      return "Selecciona primero una base de datos: 'USE <NOMBRE_BASE>'"
     end
 
     table_name = parse_result.table_reference.name
@@ -320,7 +322,7 @@ class SQLHandler
       end
 
       # Se crea el nuevo registro
-      row = Hash[list_names.zip(values)]
+      row = Hash[list_names.sort!.zip(values)]
     else
       # Aqui no existe una lista de columnas y la cantidad de valores a insertar
       # coincide con la lista de columnas en la tabla
@@ -350,6 +352,8 @@ class SQLHandler
         end
       end
       f << get_where_columns(right_part)
+    elsif where_clause.respond_to? :value
+      get_where_columns(where_clause.value)
     end
   end
 
@@ -367,7 +371,7 @@ class SQLHandler
 
   def delete_from(parse_result)
     unless @current_db
-      return "Selecciona primero una base de datos: 'USE <NOMBRE_TABLA>'"
+      return "Selecciona primero una base de datos: 'USE <NOMBRE_BASE>'"
     end
 
     table_name = parse_result.query_expression.table_expression.from_clause.tables.first.name
@@ -379,10 +383,11 @@ class SQLHandler
 
     table = get_table table_name
     columns = column_names table
-    where_clause = parse_result.query_expression.table_expression.where_clause
     rows = table["rows"]
+    rows_before = rows.size
     new_rows = []
 
+    where_clause = parse_result.query_expression.table_expression.where_clause
     if where_clause
       # Existe una sentencia WHERE
       columns_in_where = columns_from_where where_clause.search_condition
@@ -398,21 +403,83 @@ class SQLHandler
       conditions = make_conditions where_clause.search_condition.to_sql, columns_in_where
 
       new_rows = rows.reject do |col|
-        eval(conditions)
+        eval conditions
       end
     end
 
-    "Se eliminaron #{row.size - new_rows.size} registros"
+    table["rows"] = new_rows
+    save_table table
+
+    "Se eliminaron #{rows_before - new_rows.size} registros"
+  end
+
+  def format_rows(rows)
+    if rows.size.zero?
+      "No hay resultados"
+    else
+      result = rows.map { |row| row.to_s[1..-2] }.join " \0"
+      "#{result}\0\0#{rows.size} resultados\0"
+    end
   end
 
   def select_from(parse_result)
     unless @current_db
-      return "Selecciona primero una base de datos: 'USE <NOMBRE_TABLA>'"
+      return "Selecciona primero una base de datos: 'USE <NOMBRE_BASE>'"
     end
 
     table_name = parse_result.query_expression.table_expression.from_clause.tables.first.name
     unless table_exists? table_name
       return "No existe la tabla `#{@current_db}`.`#{table_name}`"
     end
+
+    table = get_table table_name
+    rows = table["rows"]
+    list_names = nil
+
+    op_type = parse_result.query_expression.list
+    case
+    when op_type.is_a?(SQLParser::Statement::All)
+      # "SELECT *"
+      list_names = column_names(table)
+    else
+      list_names = op_type.columns.map! &:name
+
+      fields_exist = columns_exist?(table, list_names)
+      unless fields_exist.first
+        # Si no todas las columnas existen en la tabla
+        return "No existe la columna `#{fields_exist.last}` en la tabla `#{table_name}`"
+      end
+    end
+
+    where_clause = parse_result.query_expression.table_expression.where_clause
+    if where_clause
+      # Existe una sentencia WHERE
+      columns_in_where = columns_from_where where_clause.search_condition
+      fields_exist = columns_exist?(table, columns_in_where)
+      unless fields_exist.first
+        # Si no todas las columnas existen en la tabla
+        return "No existe la columna `#{fields_exist.last}` en la tabla `#{table_name}`"
+      end
+
+      # Las columnas en la clausula WHERE existen en la tabla
+
+      # Cambiar las condiciones para las columnas
+      conditions = make_conditions where_clause.search_condition.to_sql, columns_in_where
+
+      rows.select! do |col|
+        eval conditions
+      end
+    end
+
+    rows.map! { |row| row.select_keys(*list_names) }
+
+    format_rows rows
   end
 end
+
+# numbers = [*1..9999]
+#
+# 50.times do
+#   puts "insert into tabla_2 values (#{numbers.sample}, '#{('a'..'z').to_a.shuffle[0,8].join}');"
+# end
+# delete from tabla_2 where columna_1 > 100 and columna_1 < 500;
